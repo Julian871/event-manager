@@ -1,7 +1,6 @@
 package dev.sorokin.eventmanager.service.impl;
 
 import dev.sorokin.eventmanager.domain.Location;
-import dev.sorokin.eventmanager.dto.response.LocationResponse;
 import dev.sorokin.eventmanager.entity.LocationEntity;
 import dev.sorokin.eventmanager.exception.ApiException;
 import dev.sorokin.eventmanager.mapper.LocationMapper;
@@ -21,13 +20,14 @@ public class LocationServiceImpl implements LocationService {
     private final LocationMapper locationMapper;
 
     @Override
-    public List<LocationResponse> getLocations() {
+    public List<Location> getLocations() {
         return locationRepository.findAll()
                 .stream()
-                .map(locationMapper::toResponse)
+                .map(locationMapper::toDomain)
                 .toList();
     }
 
+    @Override
     public Location createLocation(Location location) {
         LocationEntity entity = locationMapper.toEntity(location);
         locationRepository.save(entity);

@@ -4,22 +4,17 @@ import dev.sorokin.eventmanager.domain.Location;
 import dev.sorokin.eventmanager.dto.request.LocationRequest;
 import dev.sorokin.eventmanager.dto.response.LocationResponse;
 import dev.sorokin.eventmanager.entity.LocationEntity;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+import java.util.List;
+
+@Component
 public class LocationMapper {
 
-    public LocationResponse toResponse(LocationEntity entity) {
-        LocationResponse response = new LocationResponse();
-
-        response.setId(entity.getId());
-        response.setName(entity.getName());
-        response.setAddress(entity.getAddress());
-        response.setCapacity(entity.getCapacity());
-        response.setDescription(entity.getDescription()
-        );
-
-        return response;
+    public List<LocationResponse> toResponse(List<Location> locations) {
+        return locations.stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     public LocationResponse toResponse(Location location) {

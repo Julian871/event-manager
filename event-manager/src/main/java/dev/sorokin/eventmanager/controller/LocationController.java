@@ -29,7 +29,8 @@ public class LocationController {
 
     @GetMapping
     public ResponseEntity<List<LocationResponse>> getAllLocations() {
-        return ResponseEntity.status(HttpStatus.OK).body(locationService.getLocations());
+        List<Location> locations = locationService.getLocations();
+        return ResponseEntity.status(HttpStatus.OK).body(locationMapper.toResponse(locations));
     }
 
     @GetMapping("/{id}")

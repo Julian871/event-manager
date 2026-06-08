@@ -80,8 +80,8 @@ public class GlobalExceptionHandler {
         log.error("Unhandled exception: ", e);
 
         ErrorMessageResponse errorResponse = new ErrorMessageResponse(
-                "Unhandled error",
-                e.getMessage(),
+                "Internal server error",
+                "An unexpected error occurred",
                 LocalDateTime.now()
         );
 
