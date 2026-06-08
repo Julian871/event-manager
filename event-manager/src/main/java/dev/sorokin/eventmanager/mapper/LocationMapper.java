@@ -18,62 +18,54 @@ public class LocationMapper {
     }
 
     public LocationResponse toResponse(Location location) {
-        LocationResponse response = new LocationResponse();
-
-        response.setId(location.getId());
-        response.setName(location.getName());
-        response.setAddress(location.getAddress());
-        response.setCapacity(location.getCapacity());
-        response.setDescription(location.getDescription()
+        return new LocationResponse(
+                location.id(),
+                location.name(),
+                location.address(),
+                location.capacity(),
+                location.description()
         );
-
-        return response;
     }
 
     public Location toDomain(LocationRequest locationRequest) {
-        Location location = new Location();
-
-        location.setId(null);
-        location.setName(locationRequest.getName());
-        location.setAddress(locationRequest.getAddress());
-        location.setCapacity(locationRequest.getCapacity());
-        location.setDescription(locationRequest.getDescription()
+        return new Location(
+                null,
+                locationRequest.getName(),
+                locationRequest.getAddress(),
+                locationRequest.getCapacity(),
+                locationRequest.getDescription()
         );
-
-        return location;
     }
 
     public Location toDomain(LocationEntity locationEntity) {
-        Location location = new Location();
-
-        location.setId(locationEntity.getId());
-        location.setName(locationEntity.getName());
-        location.setAddress(locationEntity.getAddress());
-        location.setCapacity(locationEntity.getCapacity());
-        location.setDescription(locationEntity.getDescription()
+        return new Location(
+                locationEntity.getId(),
+                locationEntity.getName(),
+                locationEntity.getAddress(),
+                locationEntity.getCapacity(),
+                locationEntity.getDescription()
         );
-
-        return location;
     }
 
     public LocationEntity toEntity(Location location) {
         LocationEntity locationEntity = new LocationEntity();
-        locationEntity.setName(location.getName());
-        locationEntity.setAddress(location.getAddress());
-        locationEntity.setCapacity(location.getCapacity());
-        if(location.getDescription() != null && !location.getDescription().trim().isEmpty()) {
-            locationEntity.setDescription(location.getDescription());
+        locationEntity.setName(location.name());
+        locationEntity.setAddress(location.address());
+        locationEntity.setCapacity(location.capacity());
+
+        if (location.description() != null && !location.description().trim().isEmpty()) {
+            locationEntity.setDescription(location.description());
         }
 
         return locationEntity;
     }
 
     public void updateEntity(LocationEntity entity, Location location) {
-        entity.setName(location.getName());
-        entity.setAddress(location.getAddress());
-        entity.setCapacity(location.getCapacity());
-        if(location.getDescription() != null && !location.getDescription().trim().isEmpty()) {
-            entity.setDescription(location.getDescription());
+        entity.setName(location.name());
+        entity.setAddress(location.address());
+        entity.setCapacity(location.capacity());
+        if(location.description() != null && !location.description().trim().isEmpty()) {
+            entity.setDescription(location.description());
         }
     }
 }

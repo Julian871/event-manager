@@ -1,17 +1,11 @@
 package dev.sorokin.eventmanager.dto.response;
 
-import lombok.Data;
+public record LocationResponse(
+        Long id,
+        String name,
+        String address,
+        Integer age,
+        String description
 
-@Data
-public class LocationResponse {
-
-    private Integer id;
-
-    private String name;
-
-    private String address;
-
-    private Integer capacity;
-
-    private String description;
+) {
 }

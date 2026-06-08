@@ -33,24 +33,24 @@ public class LocationController {
         return ResponseEntity.status(HttpStatus.OK).body(locationMapper.toResponse(locations));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<LocationResponse> getLocationById(@PathVariable Integer id) {
-        Location location = locationService.getLocationById(id);
+    @GetMapping("/{locationId}")
+    public ResponseEntity<LocationResponse> getLocationById(@PathVariable Long locationId) {
+        Location location = locationService.getLocationById(locationId);
         return ResponseEntity.status(HttpStatus.OK).body(locationMapper.toResponse(location));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{locationId}")
     public ResponseEntity<LocationResponse> updateLocation(
-            @PathVariable Integer id,
+            @PathVariable Long locationId,
             @Valid @RequestBody LocationRequest locationRequest
             ) {
-        Location updated = locationService.updateLocation(id, locationMapper.toDomain(locationRequest));
+        Location updated = locationService.updateLocation(locationId, locationMapper.toDomain(locationRequest));
         return ResponseEntity.status(HttpStatus.OK).body(locationMapper.toResponse(updated));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLocation(@PathVariable Integer id) {
-        locationService.deleteLocation(id);
+    @DeleteMapping("/{locationId}")
+    public ResponseEntity<Void> deleteLocation(@PathVariable Long locationId) {
+        locationService.deleteLocation(locationId);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
