@@ -4,7 +4,7 @@ public record LocationResponse(
         Long id,
         String name,
         String address,
-        Integer age,
+        Integer capacity,
         String description
 
 ) {
