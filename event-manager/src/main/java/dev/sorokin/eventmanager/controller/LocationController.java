@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,35 +23,40 @@ public class LocationController {
     private final LocationMapper locationMapper;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<LocationResponse> createLocation(@Valid @RequestBody LocationRequest locationRequest) {
         Location created = locationService.createLocation(locationMapper.toDomain(locationRequest));
         return ResponseEntity.status(HttpStatus.CREATED).body(locationMapper.toResponse(created));
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<List<LocationResponse>> getAllLocations() {
         List<Location> locations = locationService.getLocations();
         return ResponseEntity.status(HttpStatus.OK).body(locationMapper.toResponse(locations));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<LocationResponse> getLocationById(@PathVariable Integer id) {
-        Location location = locationService.getLocationById(id);
+    @GetMapping("/{locationId}")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    public ResponseEntity<LocationResponse> getLocationById(@PathVariable Long locationId) {
+        Location location = locationService.getLocationById(locationId);
         return ResponseEntity.status(HttpStatus.OK).body(locationMapper.toResponse(location));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{locationId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<LocationResponse> updateLocation(
-            @PathVariable Integer id,
+            @PathVariable Long locationId,
             @Valid @RequestBody LocationRequest locationRequest
             ) {
-        Location updated = locationService.updateLocation(id, locationMapper.toDomain(locationRequest));
+        Location updated = locationService.updateLocation(locationId, locationMapper.toDomain(locationRequest));
         return ResponseEntity.status(HttpStatus.OK).body(locationMapper.toResponse(updated));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLocation(@PathVariable Integer id) {
-        locationService.deleteLocation(id);
+    @DeleteMapping("/{locationId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteLocation(@PathVariable Long locationId) {
+        locationService.deleteLocation(locationId);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

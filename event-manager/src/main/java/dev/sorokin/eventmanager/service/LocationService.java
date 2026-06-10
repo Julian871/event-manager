@@ -10,9 +10,9 @@ public interface LocationService {
 
     Location createLocation(Location location);
 
-    void deleteLocation(int locationId);
+    Location updateLocation(Long locationId, Location location);
 
-    Location getLocationById(int locationId);
+    void deleteLocation(Long locationId);
 
-    Location updateLocation(int locationId, Location location);
+    Location getLocationById(Long locationId);
 }
