@@ -2,7 +2,6 @@ package dev.sorokin.eventmanager.security;
 
 import dev.sorokin.eventmanager.security.jwt.JwtTokenFilter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,13 +21,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
-    @Autowired
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-
-    @Autowired
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
-
-    @Autowired
     private final JwtTokenFilter jwtTokenFilter;
 
     @Bean

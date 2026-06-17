@@ -1,18 +1,18 @@
 package dev.sorokin.eventmanager.security.jwt;
 
 import dev.sorokin.eventmanager.domain.User;
-import dev.sorokin.eventmanager.exception.ApiException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 
+@Slf4j
 @Component
 public class JwtTokenManager {
 
@@ -39,15 +39,25 @@ public class JwtTokenManager {
                 .compact();
     }
 
-    public Claims getClaimsFromToken(String jwtToken) {
+    public boolean isValidToken(String jwtToken) {
         try {
-            return Jwts.parser()
+            Jwts
+                    .parser()
                     .verifyWith(key)
                     .build()
-                    .parseSignedClaims(jwtToken)
-                    .getPayload();
+                    .parseSignedClaims(jwtToken);
+
+            return true;
         } catch (JwtException e) {
-            throw new ApiException("Invalid or expired token", HttpStatus.UNAUTHORIZED);
+            return false;
         }
+    }
+
+    public Claims getClaimsFromToken(String jwtToken) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(jwtToken)
+                .getPayload();
     }
 }

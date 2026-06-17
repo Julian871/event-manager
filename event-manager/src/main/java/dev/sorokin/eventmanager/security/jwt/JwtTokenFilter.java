@@ -37,6 +37,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         var jwtToken = authorizationHeader.substring(7);
 
+        jwtTokenManager.isValidToken(jwtToken);
+
         Claims claims = jwtTokenManager.getClaimsFromToken(jwtToken);
 
         String login = claims.getSubject();
