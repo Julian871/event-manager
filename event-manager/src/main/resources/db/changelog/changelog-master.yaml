@@ -4,3 +4,6 @@ databaseChangeLog:
 
   - include:
       file: db/changelog/changesets/0002_create_locations.sql
+
+  - include:
+      file: db/changelog/changesets/0003_create_user_account.sql

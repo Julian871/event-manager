@@ -36,13 +36,13 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public void deleteLocation(int locationId) {
+    public void deleteLocation(Long locationId) {
         if(!locationRepository.existsById(locationId)) throw new ApiException("Location not found", HttpStatus.NOT_FOUND);
         locationRepository.deleteById(locationId);
     }
 
     @Override
-    public Location getLocationById(int locationId) {
+    public Location getLocationById(Long locationId) {
 
         LocationEntity entity = locationRepository.findById(locationId).orElseThrow(
                 () -> new ApiException("Location not found", HttpStatus.NOT_FOUND)
@@ -52,7 +52,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public Location updateLocation(int locationId, Location location) {
+    public Location updateLocation(Long locationId, Location location) {
         LocationEntity entity = locationRepository.findById(locationId).orElseThrow(
                 () -> new ApiException("Location not found", HttpStatus.NOT_FOUND)
         );
