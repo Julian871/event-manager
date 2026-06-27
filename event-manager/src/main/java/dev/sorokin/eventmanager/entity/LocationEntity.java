@@ -3,6 +3,9 @@ package dev.sorokin.eventmanager.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "locations")
 @Getter
@@ -27,4 +30,11 @@ public class LocationEntity {
 
     @Column(name = "description")
     private String description;
+
+    @OneToMany(
+            mappedBy = "location",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<EventEntity> events = new ArrayList<>();
 }

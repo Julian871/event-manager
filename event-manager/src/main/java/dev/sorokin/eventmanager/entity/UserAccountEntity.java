@@ -4,6 +4,9 @@ import dev.sorokin.eventmanager.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "user_account")
 @Getter
@@ -30,4 +33,18 @@ public class UserAccountEntity {
     @Column(name = "role", nullable = false)
     @Builder.Default
     private UserRole role = UserRole.USER;
+
+    @OneToMany(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<EventEntity> events = new ArrayList<>();
+
+    @OneToMany(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<EventRegistrationEntity> registrations = new ArrayList<>();
 }
