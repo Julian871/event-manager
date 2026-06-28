@@ -1,9 +1,11 @@
 package dev.sorokin.eventmanager.repository;
 
 import dev.sorokin.eventmanager.entity.EventEntity;
+import jakarta.transaction.Transactional;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -44,4 +46,21 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
             @Param("locationId") Long locationId,
             @Param("eventStatus") String eventStatus
     );
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+UPDATE events SET status = 'STARTED'
+WHERE start_at <= CURRENT_TIMESTAMP AND status = 'WAIT_START'
+""", nativeQuery = true)
+    void updateEventStatusToStart();
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+UPDATE events SET status = 'FINISHED'
+WHERE start_at + (duration_minutes * INTERVAL '1 minute') <= CURRENT_TIMESTAMP
+AND status = 'STARTED'
+""", nativeQuery = true)
+    void updateEventStatusToFinish();
 }

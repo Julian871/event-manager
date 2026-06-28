@@ -6,7 +6,7 @@ create table events (
                         max_places INTEGER NOT NULL CHECK (max_places > 0),
                         occupied_places INTEGER NOT NULL DEFAULT 0 CHECK (occupied_places >= 0 AND occupied_places <= max_places),
                         cost INTEGER NOT NULL CHECK ( cost > 0 ),
-                        status VARCHAR(20) NOT NULL DEFAULT 'WAIT_START' CHECK (status IN ('WAIT_START', 'ACTIVE', 'COMPLETED', 'CANCELLED')),
+                        status VARCHAR(20) NOT NULL DEFAULT 'WAIT_START' CHECK (status IN ('WAIT_START', 'STARTED', 'FINISHED', 'CANCELLED')),
                         user_id BIGINT NOT NULL,
                         location_id BIGINT NOT NULL,
                         CONSTRAINT fk_event_user FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE SET NULL,
