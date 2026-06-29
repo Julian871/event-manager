@@ -24,7 +24,7 @@ public class EventSearchRequest {
 
     @Pattern(
             regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?$",
-            message = "dateStartAfter must be in format 'YYYY-MM-DDThh:mm:ss'"
+            message = "dateStartBefore must be in format 'YYYY-MM-DDThh:mm:ss'"
     )
     private String dateStartBefore;
 

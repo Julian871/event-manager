@@ -79,6 +79,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public Event updateEventById(Long eventId, Event event) {
 
         EventEntity eventEntity = eventRepository.findById(eventId).orElseThrow(

@@ -21,7 +21,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
 
     @Query(value = """
             SELECT * FROM events e
-            WHERE (:name IS NULL OR e.name ILIKE CONCAT('%', :name, '%'))
+            WHERE (:name IS NULL OR e.name = :name)
             AND (:minPlaces IS NULL OR e.max_places >= :minPlaces)
             AND (:maxPlaces IS NULL OR e.max_places <= :maxPlaces)
             AND (:dateStartAfter IS NULL OR e.start_at >= CAST(:dateStartAfter AS timestamp))

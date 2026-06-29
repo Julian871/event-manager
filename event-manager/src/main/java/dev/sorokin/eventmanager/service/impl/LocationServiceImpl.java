@@ -48,6 +48,9 @@ public class LocationServiceImpl implements LocationService {
                 () -> new ApiException("Location not found", HttpStatus.NOT_FOUND)
         );
 
+        if (!entity.getEvents().isEmpty())
+            throw new ApiException("Cannot delete location with existing events", HttpStatus.BAD_REQUEST);
+
         return locationMapper.toDomain(entity);
     }
 

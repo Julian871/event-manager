@@ -69,6 +69,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
     }
 
     @Override
+    @Transactional
     public void cancelEventRegistration(Long eventId) {
         EventEntity eventEntity = eventRepository.findById(eventId).orElseThrow(
                 () -> new ApiException("Event not found", HttpStatus.NOT_FOUND)
