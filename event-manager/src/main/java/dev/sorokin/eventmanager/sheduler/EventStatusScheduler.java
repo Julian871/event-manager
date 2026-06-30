@@ -1,15 +1,13 @@
-package dev.sorokin.eventmanager.util;
+package dev.sorokin.eventmanager.sheduler;
 
 import dev.sorokin.eventmanager.repository.EventRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 
 @Component
-@EnableScheduling
 public class EventStatusScheduler {
 
     private final static Logger log = LoggerFactory.getLogger(EventStatusScheduler.class);

@@ -29,7 +29,7 @@ public class EventController {
     public ResponseEntity<EventResponse> createEvent(@Valid @RequestBody EventCreateRequest request) {
         Event event = eventService.createEvent(eventMapper.toDomainFromCreate(request));
 
-        return ResponseEntity.status(HttpStatus.OK).body(eventMapper.toResponseFromEvent(event));
+        return ResponseEntity.status(HttpStatus.CREATED).body(eventMapper.toResponseFromEvent(event));
     }
 
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")

@@ -63,4 +63,16 @@ WHERE start_at + (duration_minutes * INTERVAL '1 minute') <= CURRENT_TIMESTAMP
 AND status = 'STARTED'
 """, nativeQuery = true)
     void updateEventStatusToFinish();
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE EventEntity e SET e.occupiedPlaces = e.occupiedPlaces + 1 " +
+            "WHERE e.id = :id AND e.occupiedPlaces < e.maxPlaces")
+    int incrementOccupiedPlaces(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE EventEntity e SET e.occupiedPlaces = e.occupiedPlaces - 1 " +
+            "WHERE e.id = :id AND e.occupiedPlaces > 0")
+    int decrementOccupiedPlaces(@Param("id") Long id);
 }

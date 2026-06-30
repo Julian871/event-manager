@@ -58,8 +58,11 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
             throw new ApiException("User already registered for this event", HttpStatus.BAD_REQUEST);
         }
 
-        eventEntity.setOccupiedPlaces(eventEntity.getOccupiedPlaces() + 1);
-        eventRepository.save(eventEntity);
+        int updatedCount = eventRepository.incrementOccupiedPlaces(eventId);
+
+        if (updatedCount == 0) {
+            throw new ApiException("No available places for this event", HttpStatus.BAD_REQUEST);
+        }
 
         EventRegistrationEntity registration = new EventRegistrationEntity();
         registration.setEvent(eventEntity);
@@ -83,16 +86,20 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
                         () -> new ApiException("User not found", HttpStatus.NOT_FOUND)
         );
 
-        EventRegistrationEntity registrations = eventRegistrationRepository
+        EventRegistrationEntity registration = eventRegistrationRepository
                 .findByEventIdAndUserId(eventId, user.getId())
                 .orElseThrow(
                         () -> new ApiException("Registration not found", HttpStatus.NOT_FOUND)
                 );
 
-        eventRegistrationRepository.deleteById(registrations.getId());
-        eventEntity.setOccupiedPlaces(eventEntity.getOccupiedPlaces() - 1);
+        int updatedCount = eventRepository.decrementOccupiedPlaces(eventId);
 
-        eventRepository.save(eventEntity);
+        if (updatedCount == 0) {
+            throw new ApiException("Failed to cancel registration due to inconsistent state",
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        eventRegistrationRepository.delete(registration);
     }
 
     @Override
