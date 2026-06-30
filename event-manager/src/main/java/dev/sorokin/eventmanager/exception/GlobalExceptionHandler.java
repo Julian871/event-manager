@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -31,6 +32,27 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(e.getStatus())
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Object> handleMessageNotReadable(HttpMessageNotReadableException e) {
+        String message = "Request body is required";
+
+        if (e.getMessage() != null && e.getMessage().contains("Required request body is missing")) {
+            message = "Request body is missing";
+        } else if (e.getMessage() != null && e.getMessage().contains("JSON parse error")) {
+            message = "Invalid JSON format";
+        }
+
+        ErrorMessageResponse errorResponse = new ErrorMessageResponse(
+                "JSON body error",
+                message,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .badRequest()
                 .body(errorResponse);
     }
 

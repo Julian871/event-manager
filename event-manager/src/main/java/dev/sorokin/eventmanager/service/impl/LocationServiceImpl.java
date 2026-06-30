@@ -37,7 +37,13 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     public void deleteLocation(Long locationId) {
-        if(!locationRepository.existsById(locationId)) throw new ApiException("Location not found", HttpStatus.NOT_FOUND);
+        LocationEntity location = locationRepository.findById(locationId).orElseThrow(
+                () -> new ApiException("Location not found", HttpStatus.NOT_FOUND)
+        );
+
+        if(!location.getEvents().isEmpty())
+            throw new ApiException("Location has events", HttpStatus.BAD_REQUEST);
+
         locationRepository.deleteById(locationId);
     }
 
@@ -47,6 +53,9 @@ public class LocationServiceImpl implements LocationService {
         LocationEntity entity = locationRepository.findById(locationId).orElseThrow(
                 () -> new ApiException("Location not found", HttpStatus.NOT_FOUND)
         );
+
+        if (!entity.getEvents().isEmpty())
+            throw new ApiException("Cannot delete location with existing events", HttpStatus.BAD_REQUEST);
 
         return locationMapper.toDomain(entity);
     }
