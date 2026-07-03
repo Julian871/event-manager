@@ -47,22 +47,18 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
             @Param("eventStatus") String eventStatus
     );
 
-    @Modifying
-    @Transactional
     @Query(value = """
-UPDATE events SET status = 'STARTED'
-WHERE start_at <= CURRENT_TIMESTAMP AND status = 'WAIT_START'
-""", nativeQuery = true)
-    void updateEventStatusToStart();
+            SELECT * FROM events e
+            WHERE e.start_at <= CURRENT_TIMESTAMP AND e.status = 'WAIT_START'
+            """, nativeQuery = true)
+    List<EventEntity> findEventsToStart();
 
-    @Modifying
-    @Transactional
     @Query(value = """
-UPDATE events SET status = 'FINISHED'
-WHERE start_at + (duration_minutes * INTERVAL '1 minute') <= CURRENT_TIMESTAMP
-AND status = 'STARTED'
-""", nativeQuery = true)
-    void updateEventStatusToFinish();
+            SELECT * FROM events e
+            WHERE e.start_at + (e.duration_minutes * INTERVAL '1 minute') <= CURRENT_TIMESTAMP
+            AND e.status = 'STARTED'
+            """, nativeQuery = true)
+    List<EventEntity> findEventsToFinish();
 
     @Modifying
     @Transactional

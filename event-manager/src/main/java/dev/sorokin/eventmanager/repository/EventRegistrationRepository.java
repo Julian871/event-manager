@@ -16,4 +16,5 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
     @EntityGraph(attributePaths = {"event", "event.location", "event.user"})
     List<EventRegistrationEntity> findAllByUserLogin(String userLogin);
 
+    List<EventRegistrationEntity> findByEventId(Long eventId);
 }

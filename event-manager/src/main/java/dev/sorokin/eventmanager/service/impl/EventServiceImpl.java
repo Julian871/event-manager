@@ -8,18 +8,27 @@ import dev.sorokin.eventmanager.entity.UserAccountEntity;
 import dev.sorokin.eventmanager.enums.EventStatus;
 import dev.sorokin.eventmanager.enums.UserRole;
 import dev.sorokin.eventmanager.exception.ApiException;
+import dev.sorokin.eventmanager.kafka.EventChangeSender;
 import dev.sorokin.eventmanager.mapper.EventMapper;
+import dev.sorokin.eventmanager.repository.EventRegistrationRepository;
 import dev.sorokin.eventmanager.repository.EventRepository;
 import dev.sorokin.eventmanager.repository.LocationRepository;
 import dev.sorokin.eventmanager.repository.UserRepository;
 import dev.sorokin.eventmanager.service.EventService;
 import dev.sorokin.eventmanager.util.SecurityUtil;
+import dev.sorokin.kafka.ChangeItem;
+import dev.sorokin.kafka.EventChangeMessage;
+import dev.sorokin.kafka.EventType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,10 +36,12 @@ import java.util.stream.Collectors;
 public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
+    private final EventRegistrationRepository eventRegistrationRepository;
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
     private final EventMapper eventMapper;
     private final SecurityUtil securityUtil;
+    private final EventChangeSender eventChangeSender;
 
 
     @Override
@@ -82,11 +93,14 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public Event updateEventById(Long eventId, Event event) {
 
-        EventEntity eventEntity = eventRepository.findById(eventId).orElseThrow(
+        EventEntity oldEventEntity = eventRepository.findById(eventId).orElseThrow(
                 () -> new ApiException("Event not found", HttpStatus.NOT_FOUND)
         );
 
-        checkCredentials(eventEntity.getUser().getLogin());
+        checkCredentials(oldEventEntity.getUser().getLogin());
+
+        if(oldEventEntity.getStatus() != EventStatus.WAIT_START)
+            throw new ApiException("Event started or finished or canceled", HttpStatus.BAD_REQUEST);
 
         LocationEntity locationEntity = null;
 
@@ -100,9 +114,34 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        EventEntity updatedEvent = eventMapper.toEntityFromUpdate(event, eventEntity, locationEntity);
+        EventEntity oldEventCopy = copyEventEntity(oldEventEntity);
+
+        EventEntity updatedEvent = eventMapper.toEntityFromUpdate(event, oldEventEntity, locationEntity);
 
         eventRepository.save(updatedEvent);
+
+        List<ChangeItem> changes = collectChanges(oldEventCopy, updatedEvent);
+
+        if(!changes.isEmpty()) {
+            List<Long> subscribers = getSubscribers(eventId);
+
+            Long currentUserId = getCurrentUserId();
+
+            EventChangeMessage message = EventChangeMessage.builder()
+                    .messageId(UUID.randomUUID().toString())
+                    .eventType(EventType.EVENT_UPDATED)
+                    .eventId(eventId)
+                    .eventName(updatedEvent.getName())
+                    .occurredAt(LocalDateTime.now())
+                    .ownerId(updatedEvent.getUser().getId())
+                    .changedById(currentUserId)
+                    .subscribers(subscribers)
+                    .changes(changes)
+                    .comment("Event updated")
+                    .build();
+
+            eventChangeSender.sendEventChanges(message);
+        }
 
         return eventMapper.toEventFromEntity(
                 updatedEvent,
@@ -162,5 +201,99 @@ public class EventServiceImpl implements EventService {
                 !login.equals(userLogin)
                         && !userRole.equals(UserRole.ADMIN.name()))
             throw new ApiException("Action is not available", HttpStatus.FORBIDDEN);
+    }
+
+    private EventEntity copyEventEntity(EventEntity original) {
+        EventEntity copy = new EventEntity();
+        copy.setId(original.getId());
+        copy.setName(original.getName());
+        copy.setStartAt(original.getStartAt());
+        copy.setDurationMinutes(original.getDurationMinutes());
+        copy.setMaxPlaces(original.getMaxPlaces());
+        copy.setOccupiedPlaces(original.getOccupiedPlaces());
+        copy.setCost(original.getCost());
+        copy.setStatus(original.getStatus());
+        copy.setUser(original.getUser());
+        copy.setLocation(original.getLocation());
+        return copy;
+    }
+
+    private List<ChangeItem> collectChanges(EventEntity oldEvent, EventEntity newEvent) {
+        List<ChangeItem> changes = new ArrayList<>();
+
+        if (!Objects.equals(oldEvent.getName(), newEvent.getName())) {
+            changes.add(ChangeItem.builder()
+                    .field("name")
+                    .oldValue(oldEvent.getName())
+                    .newValue(newEvent.getName())
+                    .build());
+        }
+
+        if (!Objects.equals(oldEvent.getStartAt(), newEvent.getStartAt())) {
+            changes.add(ChangeItem.builder()
+                    .field("date")
+                    .oldValue(oldEvent.getStartAt() != null ? oldEvent.getStartAt().toString() : null)
+                    .newValue(newEvent.getStartAt() != null ? newEvent.getStartAt().toString() : null)
+                    .build());
+        }
+
+        if (!Objects.equals(oldEvent.getMaxPlaces(), newEvent.getMaxPlaces())) {
+            changes.add(ChangeItem.builder()
+                    .field("maxPlaces")
+                    .oldValue(String.valueOf(oldEvent.getMaxPlaces()))
+                    .newValue(String.valueOf(newEvent.getMaxPlaces()))
+                    .build());
+        }
+
+        if (!Objects.equals(oldEvent.getCost(), newEvent.getCost())) {
+            changes.add(ChangeItem.builder()
+                    .field("cost")
+                    .oldValue(String.valueOf(oldEvent.getCost()))
+                    .newValue(String.valueOf(newEvent.getCost()))
+                    .build());
+        }
+
+        if (!Objects.equals(oldEvent.getDurationMinutes(), newEvent.getDurationMinutes())) {
+            changes.add(ChangeItem.builder()
+                    .field("duration")
+                    .oldValue(String.valueOf(oldEvent.getDurationMinutes()))
+                    .newValue(String.valueOf(newEvent.getDurationMinutes()))
+                    .build());
+        }
+
+        if (oldEvent.getLocation() != null && newEvent.getLocation() != null) {
+            if (!Objects.equals(oldEvent.getLocation().getId(), newEvent.getLocation().getId())) {
+                changes.add(ChangeItem.builder()
+                        .field("locationId")
+                        .oldValue(String.valueOf(oldEvent.getLocation().getId()))
+                        .newValue(String.valueOf(newEvent.getLocation().getId()))
+                        .build());
+            }
+        }
+
+        if (!Objects.equals(oldEvent.getStatus(), newEvent.getStatus())) {
+            changes.add(ChangeItem.builder()
+                    .field("status")
+                    .oldValue(oldEvent.getStatus() != null ? oldEvent.getStatus().name() : null)
+                    .newValue(newEvent.getStatus() != null ? newEvent.getStatus().name() : null)
+                    .build());
+        }
+
+        return changes;
+    }
+
+    private List<Long> getSubscribers(Long eventId) {
+        return eventRegistrationRepository.findByEventId(eventId)
+                .stream()
+                .map(registration -> registration.getUser().getId())
+                .collect(Collectors.toList());
+    }
+
+    private Long getCurrentUserId() {
+        UserAccountEntity user = userRepository.findByLogin(securityUtil.getCurrentUserLogin()).orElseThrow(
+                () -> new ApiException("User not found", HttpStatus.NOT_FOUND)
+        );
+
+        return user.getId();
     }
 }
