@@ -26,8 +26,11 @@ public class NotificationMapper {
 
     private final ObjectMapper objectMapper;
 
+    private record ParsedPayload(String eventName, List<ChangeItem> changes) {}
+
     public Notification toDomain(NotificationEntity entity) {
         NotificationEventPayloadEntity payload = entity.getPayload();
+        ParsedPayload parsed = parsePayload(payload);
 
         return new Notification(
                 entity.getId(),
@@ -36,11 +39,11 @@ public class NotificationMapper {
                 payload.getMessageId(),
                 payload.getEventType(),
                 payload.getEventId(),
-                getEventNameFromPayload(payload),
+                parsed.eventName,
                 payload.getOccurredAt(),
                 payload.getChangedById(),
                 payload.getOwnerId(),
-                getChangesFromPayload(payload),
+                parsed.changes,
                 entity.getCreatedAt(),
                 entity.isRead(),
                 entity.getReadAt()
@@ -115,28 +118,21 @@ public class NotificationMapper {
         }
     }
 
-    private String getEventNameFromPayload(NotificationEventPayloadEntity payload) {
-        try {
-            Map<String, Object> map = objectMapper.readValue(payload.getPayloadJson(), Map.class);
-            return (String) map.get("eventName");
-        } catch (JsonProcessingException e) {
-            log.error("Error getting eventName from payload", e);
-            return null;
-        }
-    }
-
-    private List<ChangeItem> getChangesFromPayload(NotificationEventPayloadEntity payload) {
+    private ParsedPayload parsePayload(NotificationEventPayloadEntity payload) {
         try {
             Map<String, Object> map = objectMapper.readValue(payload.getPayloadJson(), Map.class);
 
-            return objectMapper.convertValue(
+            String eventName = (String) map.get("eventName");
+            List<ChangeItem> changes = objectMapper.convertValue(
                     map.get("changes"),
                     new TypeReference<>() {
                     }
             );
+
+            return new ParsedPayload(eventName, changes);
         } catch (Exception e) {
-            log.error("Error getting changes from payload", e);
-            return Collections.emptyList();
+            log.error("Error parsing payload", e);
+            return new ParsedPayload(null, Collections.emptyList());
         }
     }
 

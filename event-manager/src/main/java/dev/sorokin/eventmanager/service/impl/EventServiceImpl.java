@@ -89,6 +89,7 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toEventFromEntity(event, event.getUser().getId(), event.getLocation().getId());
     }
 
+    //TODO: Outbox Pattern for production
     @Override
     @Transactional
     public Event updateEventById(Long eventId, Event event) {
