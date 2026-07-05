@@ -43,3 +43,4 @@ docs/*
 !docs/openapi/**
 diagrams/
 /event-manager/src/main/resources/application-secret.properties
+/event-notificator/src/main/resources/application-secret.properties
