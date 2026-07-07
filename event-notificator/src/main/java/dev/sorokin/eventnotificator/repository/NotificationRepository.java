@@ -41,5 +41,12 @@ WHERE n.id IN :notificationIds AND n.userId = :userId AND n.isRead = false
     @Query("DELETE FROM NotificationEventPayloadEntity p WHERE NOT EXISTS " +
             "(SELECT 1 FROM NotificationEntity n WHERE n.payload.id = p.id)")
     int deleteOrphanPayloads();
+
+    @Query("""
+    SELECT COUNT(n)
+    FROM NotificationEntity n
+    WHERE n.userId = :userId AND n.isRead = false
+""")
+    Long countByUserIdAndIsReadyFalse(@Param("userId") Long userId);
 }
 

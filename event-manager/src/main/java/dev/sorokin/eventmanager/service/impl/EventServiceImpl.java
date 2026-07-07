@@ -20,6 +20,8 @@ import dev.sorokin.kafka.ChangeItem;
 import dev.sorokin.kafka.EventChangeMessage;
 import dev.sorokin.kafka.EventType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static dev.sorokin.eventmanager.redis.CacheConstants.CACHE_VALUE_EVENT;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +69,10 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toEventFromEntity(entity, userAccountEntity.getId(), event.locationId());
     }
 
+    @CacheEvict(
+            value = CACHE_VALUE_EVENT,
+            key = "'id:' + #eventId"
+    )
     @Override
     public void deleteEventById(Long eventId) {
         EventEntity event = eventRepository.findById(eventId).orElseThrow(
@@ -80,6 +88,10 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
     }
 
+    @Cacheable(
+            value = CACHE_VALUE_EVENT,
+            key = "'id:' + #eventId"
+    )
     @Override
     public Event getEventById(Long eventId) {
         EventEntity event = eventRepository.findById(eventId).orElseThrow(
@@ -90,6 +102,10 @@ public class EventServiceImpl implements EventService {
     }
 
     //TODO: Outbox Pattern for production
+    @CacheEvict(
+            value = CACHE_VALUE_EVENT,
+            key = "'id:' + #eventId"
+    )
     @Override
     @Transactional
     public Event updateEventById(Long eventId, Event event) {

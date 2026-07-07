@@ -6,6 +6,7 @@ import dev.sorokin.eventnotificator.entity.NotificationEventPayloadEntity;
 import dev.sorokin.eventnotificator.mapper.NotificationMapper;
 import dev.sorokin.eventnotificator.repository.NotificationEventPayloadRepository;
 import dev.sorokin.eventnotificator.repository.NotificationRepository;
+import dev.sorokin.eventnotificator.service.NotificationCacheService;
 import dev.sorokin.eventnotificator.service.NotificationService;
 import dev.sorokin.eventnotificator.util.SecurityUtil;
 import dev.sorokin.kafka.EventChangeMessage;
@@ -27,6 +28,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationMapper notificationMapper;
     private final SecurityUtil securityUtil;
+    private final NotificationCacheService cacheService;
 
     @Override
     @Transactional
@@ -43,7 +45,13 @@ public class NotificationServiceImpl implements NotificationService {
 
         List<NotificationEntity> notifications = message.getSubscribers()
                 .stream()
-                .map(subscriberId -> notificationMapper.toNotificationEntity(subscriberId, payloadEntity))
+                .map(subscriberId -> {
+                    NotificationEntity notification = notificationMapper.toNotificationEntity(subscriberId, payloadEntity);
+
+                    cacheService.incrementUnreadCounter(notification.getUserId());
+
+                    return notification;
+                })
                 .toList();
 
         notificationRepository.saveAll(notifications);
@@ -68,5 +76,8 @@ public class NotificationServiceImpl implements NotificationService {
 
         int updatedCount = notificationRepository.markAsRead(notificationIds, userId, LocalDateTime.now());
         log.info("Marked {} notifications as read for userId={}", updatedCount, userId);
+
+        Long count = notificationRepository.countByUserIdAndIsReadyFalse(userId);
+        cacheService.saveCountUnreadNotification(userId, count);
     }
 }

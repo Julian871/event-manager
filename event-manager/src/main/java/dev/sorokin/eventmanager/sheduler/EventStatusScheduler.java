@@ -10,6 +10,8 @@ import dev.sorokin.kafka.EventChangeMessage;
 import dev.sorokin.kafka.EventType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +19,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static dev.sorokin.eventmanager.redis.CacheConstants.CACHE_VALUE_EVENT;
 
 @Slf4j
 @Component
@@ -26,7 +30,7 @@ public class EventStatusScheduler {
     private final EventRepository eventRepository;
     private final EventChangeSender eventChangeSender;
     private final EventRegistrationRepository eventRegistrationRepository;
-
+    private final RedisCacheManager cacheManager;
 
     @Scheduled(cron = "${event.stats.cron}")
     public void updateEventsStatus() {
@@ -38,6 +42,7 @@ public class EventStatusScheduler {
             event.setStatus(EventStatus.STARTED);
             eventRepository.save(event);
 
+            evictCache(event.getId());
             sendStatusChangeMessage(event, oldStatus);
         }
 
@@ -47,6 +52,7 @@ public class EventStatusScheduler {
             event.setStatus(EventStatus.FINISHED);
             eventRepository.save(event);
 
+            evictCache(event.getId());
             sendStatusChangeMessage(event, oldStatus);
         }
 
@@ -81,9 +87,15 @@ public class EventStatusScheduler {
                 .comment("Status changed by scheduler")
                 .build();
 
-        // 4. Отправляем
         eventChangeSender.sendEventChanges(message);
-        log.info("Sent status change message for eventId={}: {} → {}",
+        log.info("Sent status change message for eventId={}: {} to {}",
                 event.getId(), oldStatus, event.getStatus());
+    }
+
+    private void evictCache(Long eventId) {
+        Cache cache = cacheManager.getCache(CACHE_VALUE_EVENT);
+        if (cache != null) {
+            cache.evict("id:" + eventId);
+        }
     }
 }
