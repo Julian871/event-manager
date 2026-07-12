@@ -48,7 +48,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .map(subscriberId -> {
                     NotificationEntity notification = notificationMapper.toNotificationEntity(subscriberId, payloadEntity);
 
-                    cacheService.incrementUnreadCounter(notification.getUserId());
+                    cacheService.incrementUnreadCounter(notification.getUserId(), 1L);
 
                     return notification;
                 })

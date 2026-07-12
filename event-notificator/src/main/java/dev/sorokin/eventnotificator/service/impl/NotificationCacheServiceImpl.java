@@ -16,11 +16,11 @@ public class NotificationCacheServiceImpl implements NotificationCacheService {
     private final StringRedisTemplate redisTemplate;
 
     @Override
-    public void incrementUnreadCounter(Long userId) {
+    public void incrementUnreadCounter(Long userId, Long delta) {
 
         try {
             String key = CACHE_UNREAD_KEY_PREFIX + userId;
-            redisTemplate.opsForValue().increment(key);
+            redisTemplate.opsForValue().increment(key, delta);
             log.info("increment unread counter for user {}", userId);
         } catch (Exception e) {
             log.warn("Failed to increment unread counter for user {}", userId, e);
